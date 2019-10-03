@@ -7,6 +7,8 @@ from sqlalchemy import create_engine, func
 
 from flask import Flask, jsonify
 
+import datetime as dt
+
 
 #################################################
 # Database Setup
@@ -40,8 +42,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/startdate<br/>"
-        f"/api/v1.0/startandenddate<br/>"
+        f"/api/v1.0/start<startdate><br/>"
+        f"/api/v1.0/startend<startandenddate><br/>"
     )
 
 
@@ -97,7 +99,7 @@ def tobs():
     # When given the start only, calculate `TMIN`, `TAVG`, and `TMAX` for all dates greater than and equal to the start date.
     #When given the start and the end date, calculate the `TMIN`, `TAVG`, and `TMAX` for dates between the start and end date inclusive.
 
-@app.route("/api/v1.0/startdate")
+@app.route("/api/v1.0/start<startdate>")
 def startdate(startdate):
     # Create our session (link) from Python to the DB
     session = Session(engine)
@@ -111,12 +113,14 @@ def startdate(startdate):
 
     return jsonify(tmin_tavg_tmax)
 
-@app.route("/api/v1.0/startandenddate")
+@app.route("/api/v1.0/startend<startdate><enddate>")
 def startandenddate(startdate, enddate):
     session = Session(engine)
+
+    
     # start and the end date, calculate the `TMIN`, `TAVG`, and `TMAX` for dates between the start and end date inclusive.
     startend = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
-        filter(Measurement.date >= startdate).filter(Measurement.date <= enddate).all()
+        filter(func.strftime("%Y-%m-%d", Measurement.date) >= startdate).filter(func.strftime("%Y-%m-%d", Measurement.date) <= enddate).all()
 
     session.close()
 
